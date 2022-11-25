@@ -41,4 +41,4 @@ cmak:
   clusters:
     - name: kafka-cluster
       curatorConfig:
-        zkConnect: zookeeper:2181,zookeeper2:2181,zookeeper3:2181
+        zkConnect: zookeeper:2181
