@@ -1,0 +1,3 @@
+[submodule "spring-kafka"]
+	path = spring-kafka
+	url = git@github.com:arkadius/spring-kafka.git
