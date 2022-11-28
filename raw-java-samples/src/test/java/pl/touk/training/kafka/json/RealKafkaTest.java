@@ -11,9 +11,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 import static org.awaitility.Awaitility.await;
 import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 
-class FooKafkaSenderRealKafkaTest {
+class RealKafkaTest {
 
-    private final static Logger LOGGER = LoggerFactory.getLogger(FooKafkaSenderRealKafkaTest.class);
+    private final static Logger LOGGER = LoggerFactory.getLogger(RealKafkaTest.class);
 
     @Test
     public void shouldCommunicateUsingRealKafka() throws Exception {
