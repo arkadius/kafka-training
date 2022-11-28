@@ -12,36 +12,44 @@ import java.util.Map;
 
 public abstract class FooKafkaConsumer {
 
+    private final String bootstrapServers;
+
+    private final String groupId;
+
     private volatile boolean running;
-    private final KafkaConsumer<String, Foo> consumer;
 
-    public FooKafkaConsumer(String bootstrapServers) {
-        consumer = new KafkaConsumer<String, Foo>(Map.of(
-                ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class,
-                ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, JsonDeserializer.class,
-                JsonDeserializer.VALUE_DEFAULT_TYPE, Foo.class.getName(),
-                ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers,
-                ConsumerConfig.GROUP_ID_CONFIG, "foo.group",
-                ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, false
-        ));
+    public FooKafkaConsumer(String bootstrapServers, String groupId) {
+        this.bootstrapServers = bootstrapServers;
+        this.groupId = groupId;
     }
 
-    public void start(String topic) {
-        consumer.subscribe(Collections.singletonList(topic));
+    public void start(String topic, int threadsCount) {
         running = true;
-        new Thread() {
-            @Override
-            public void run() {
-                while (running) {
-                    ConsumerRecords<String, Foo> records = consumer.poll(Duration.ofSeconds(1));
-                    onRecords(records);
-                    consumer.commitSync();
+        for (int i = 1; i <= threadsCount; i++) {
+            final int threadId = i;
+            new Thread(() -> {
+                try (
+                        KafkaConsumer<String, Foo> consumer = new KafkaConsumer<>(Map.of(
+                                ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class,
+                                ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, JsonDeserializer.class,
+                                JsonDeserializer.VALUE_DEFAULT_TYPE, Foo.class.getName(),
+                                ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers,
+                                ConsumerConfig.GROUP_ID_CONFIG, groupId,
+                                ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, false
+                        ))
+                ) {
+                    consumer.subscribe(Collections.singletonList(topic));
+                    while (running) {
+                        ConsumerRecords<String, Foo> records = consumer.poll(Duration.ofSeconds(1));
+                        onRecords(records, threadId);
+                        consumer.commitSync();
+                    }
                 }
-            }
-        }.start();
+            }, "FooConsumer-" + threadId).start();
+        }
     }
 
-    public abstract void onRecords(ConsumerRecords<String, Foo> records);
+    public abstract void onRecords(ConsumerRecords<String, Foo> records, int threadId);
 
     public void stop() {
         running = false;
