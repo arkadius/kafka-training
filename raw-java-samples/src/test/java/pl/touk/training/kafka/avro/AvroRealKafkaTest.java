@@ -19,7 +19,7 @@ class AvroRealKafkaTest {
     public void shouldCommunicateUsingRealKafka() throws Exception {
         String bootstrapServers = "localhost:3032,localhost:3033,localhost:3034";
         String schemaRegistryUrl = "http://localhost:3082";
-        String topic = "foo-topic";
+        String topic = "foo-avro-topic";
 
         AtomicInteger consumedCount = new AtomicInteger();
         FooKafkaAvroConsumer consumer = new FooKafkaAvroConsumer(bootstrapServers, schemaRegistryUrl, "foo.group") {
